@@ -18,6 +18,7 @@ services:
     restart: "no"
     environment:
       DATABASE_URL: postgres://devuser:your_secure_password@db:5432/app_dev
+    working_dir: /usr/src/app
     command: ["bun", "packages/db/src/migrate.ts"]
     depends_on:
       db:
