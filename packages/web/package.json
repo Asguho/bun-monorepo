@@ -1,0 +1,6 @@
+{
+    "name": "web",
+    "dependencies": {
+        "@auro/shared": "workspace:*"
+    }
+}

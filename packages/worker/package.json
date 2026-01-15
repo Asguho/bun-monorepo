@@ -1,0 +1,10 @@
+{
+    "name": "worker",
+    "scripts": {
+        "start": "bun --env-file=../../.env src/index.ts"
+    },
+    "dependencies": {
+        "@auro/shared": "workspace:*",
+        "@auro/db": "workspace:*"
+    }
+}
