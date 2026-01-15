@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16
+    image: pgvector/pgvector:pg16
     # restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: your_secure_password
@@ -14,7 +14,7 @@ services:
   migrator:
     build:
       context: .
-      dockerfile: packages/web/Dockerfile
+      dockerfile: packages/db/Dockerfile
     restart: "no"
     environment:
       DATABASE_URL: postgres://devuser:your_secure_password@db:5432/app_dev
