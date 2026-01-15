@@ -11,6 +11,18 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  migrator:
+    build:
+      context: .
+      dockerfile: packages/web/Dockerfile
+    restart: "no"
+    environment:
+      DATABASE_URL: postgres://devuser:your_secure_password@db:5432/app_dev
+    command: ["bun", "packages/db/src/migrate.ts"]
+    depends_on:
+      db:
+        condition: service_started
+
   web:
     build:
       context: .
@@ -22,7 +34,10 @@ services:
       DATABASE_URL: postgres://devuser:your_secure_password@db:5432/app_dev
       ORIGIN: http://localhost:3000
     depends_on:
-      - db
+      migrator:
+        condition: service_completed_successfully
+      db:
+        condition: service_started
 
   worker:
     build:
@@ -32,7 +47,10 @@ services:
     environment:
       DATABASE_URL: postgres://devuser:your_secure_password@db:5432/app_dev
     depends_on:
-      - db
+      migrator:
+        condition: service_completed_successfully
+      db:
+        condition: service_started
 
 volumes:
   pgdata:

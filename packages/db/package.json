@@ -6,6 +6,7 @@
     "scripts": {
         "generate": "bun --env-file=../../.env drizzle-kit generate",
         "migrate": "bun --env-file=../../.env drizzle-kit migrate",
+        "migrate:prod": "bun src/migrate.ts",
         "push": "bun --env-file=../../.env drizzle-kit push"
     },
     "dependencies": {
