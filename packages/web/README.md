@@ -1,0 +1,1 @@
+bunx sv create --template="minimal" --types="ts" --no-install --no-dir-check --add tailwind 
