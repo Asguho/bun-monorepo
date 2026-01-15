@@ -11,5 +11,28 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  web:
+    build:
+      context: .
+      dockerfile: packages/web/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://devuser:your_secure_password@db:5432/app_dev
+      ORIGIN: http://localhost:3000
+    depends_on:
+      - db
+
+  worker:
+    build:
+      context: .
+      dockerfile: packages/worker/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://devuser:your_secure_password@db:5432/app_dev
+    depends_on:
+      - db
+
 volumes:
   pgdata:
