@@ -10,6 +10,11 @@ services:
       - "5433:5432"          
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devuser -d app_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   migrator:
     build:
@@ -22,7 +27,7 @@ services:
     command: ["bun", "packages/db/src/migrate.ts"]
     depends_on:
       db:
-        condition: service_started
+        condition: service_healthy
 
   web:
     build:
@@ -38,7 +43,7 @@ services:
       migrator:
         condition: service_completed_successfully
       db:
-        condition: service_started
+        condition: service_healthy
 
   worker:
     build:
@@ -51,7 +56,7 @@ services:
       migrator:
         condition: service_completed_successfully
       db:
-        condition: service_started
+        condition: service_healthy
 
 volumes:
   pgdata:
