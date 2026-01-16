@@ -279,7 +279,82 @@ volumes:
   pgdata:
 ```
 
-Create each of the docker files referenced in the docker compose file.
+
+Create `packages/db/Dockerfile`:
+
+```dockerfile
+FROM oven/bun:1 AS base
+WORKDIR /app
+
+# Copy all package.jsons to install dependencies
+COPY package.json bun.lock* ./
+COPY packages/db/package.json packages/db/
+
+# Install dependencies
+RUN bun install
+
+# Copy source code
+COPY packages/db packages/db
+
+WORKDIR /app/packages/db
+CMD ["bun", "run", "migrate:prod"]
+```
+
+Create `packages/worker/Dockerfile`:
+
+```dockerfile
+FROM oven/bun:1 AS base
+WORKDIR /app
+
+# Copy root and workspace package files
+COPY package.json bun.lock* ./
+COPY packages/shared/package.json packages/shared/
+COPY packages/db/package.json packages/db/
+COPY packages/worker/package.json packages/worker/
+
+# Install production dependencies
+RUN bun install --production
+
+# Copy source code
+COPY packages/shared packages/shared
+COPY packages/db packages/db
+COPY packages/worker packages/worker
+
+WORKDIR /app/packages/worker
+CMD ["bun", "run", "start"]
+```
+
+Create `packages/web/Dockerfile`:
+
+```dockerfile
+FROM oven/bun:1 AS builder
+WORKDIR /app
+
+# Install dependencies
+COPY package.json bun.lock* ./
+COPY packages/shared/package.json packages/shared/
+COPY packages/db/package.json packages/db/
+COPY packages/web/package.json packages/web/
+RUN bun install
+
+# Copy source and build
+COPY packages/shared packages/shared
+COPY packages/db packages/db
+COPY packages/web packages/web
+WORKDIR /app/packages/web
+RUN bun run build
+
+# Runner
+FROM oven/bun:1 AS runner
+WORKDIR /app
+
+# Copy build artifacts and dependencies
+COPY --from=builder /app/packages/web/build build
+COPY --from=builder /app/node_modules node_modules
+COPY --from=builder /app/package.json package.json
+
+CMD ["bun", "build/index.js"]
+```
 
 ## 7. Final Configuration
 
