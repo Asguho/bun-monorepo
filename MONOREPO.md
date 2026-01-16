@@ -2,7 +2,7 @@
 
 This guide explains how to recreate this monorepo structure from scratch using Bun.
 
-Before starting make sure you have the name of the project. Else assume it is the name of the current folder.
+Before starting, make sure you have the name of the project. Otherwise, assume it is the name of the current folder.
 
 ## 1. Root Initialization
 
@@ -64,6 +64,12 @@ export function takeFirstOrNull<T>(array: T[]): T | null {
 }
 ```
 
+Create `packages/shared/src/index.ts`:
+
+```typescript
+export * from './utils/queries';
+```
+
 ## 3. Database Package Setup
 
 Set up the `@[PROJECT_NAME]/db` package for database schema and migrations.
@@ -116,12 +122,12 @@ export default defineConfig({
 Create `packages/db/src/schema.ts`:
 
 ```typescript
-import { pgTable, serial, text, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
 
-export const userTable = pgTable('users', {
-    id: serial('id').primaryKey(),
-    email: text('email').notNull(),
-    isActive: boolean('is_active').default(true),
+export const userTable = pgTable("userTable", {
+    id: serial().primaryKey(),
+    email: text().notNull(),
+    createdAt: timestamp().defaultNow()
 });
 ```
 
@@ -188,28 +194,26 @@ Update `packages/worker/package.json` scripts:
 Create `packages/worker/src/index.ts`:
 
 ```typescript
-import { GREETING } from "@[PROJECT_NAME]/shared";
 import { db, userTable } from "@[PROJECT_NAME]/db";
 
-console.log("Worker says:", GREETING);
+const result = await db.insert(userTable).values({ email: "test@test.dk" }).returning()
 
-// await db.insert(userTable).values({ email: "test@test.dk" })
-
-const users = await db.select().from(userTable);
-console.log("users", users);
+console.log("Inserted user result", result);
 ```
-## 5. Setup Sveltkit web
+## 5. Setup SvelteKit web
 
 ```bash
 cd ../.. # Return to root
-bunx sv create web --template="minimal" --types="ts" --no-install --no-dir-check --add tailwind 
+mkdir -p packages/web
+cd packages/web
+bunx sv create . --template="minimal" --types="ts" --no-install --no-dir-check --add tailwind="plugins:typography"
 ```
-add these to the dependecies:
+Add these to the dependencies in `packages/web/package.json`:
 ```json
 "@[PROJECT_NAME]/shared": "workspace:*",
-"@[PROJECT_NAME]/db": "workspace:*"
-```
-You must add the kit.experimental.remoteFunctions and the compilerOptions.experimental.async option in your svelte.config.js.
+"@[PROJECT_NAME]/db": "workspace:*"`svelte.config.js`.
+
+In `packages/web/src/lib/server/remote/demo.remote.ts`,emoteFunctions and the compilerOptions.experimental.async option in your svelte.config.js.
 
 in lib/server/remote/demo.remote.ts add 
 ```ts
@@ -218,10 +222,11 @@ import { takeFirstOrNull } from "@[PROJECT_NAME]/shared/utils/queries";
 import { db, userTable } from "@[PROJECT_NAME]/db";
 
 export const getUser = query(async () => {
-	const user = await db.select().from(userTable).limit(1).then(takeFirstOrNull);
+    const user = await db.select().from(userTable).limit(1).then(takeFirstOrNull);
 
     return user;
 });
+
 
 ```
 
@@ -239,3 +244,4 @@ Install all dependencies from the root to link workspaces:
 cd ../..
 bun install
 ```
+
