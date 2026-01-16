@@ -213,10 +213,9 @@ Add these to the dependencies in `packages/web/package.json`:
 "@[PROJECT_NAME]/shared": "workspace:*",
 "@[PROJECT_NAME]/db": "workspace:*"`svelte.config.js`.
 ```
-
 In `packages/web/src/lib/server/remote/demo.remote.ts`,emoteFunctions and the compilerOptions.experimental.async option in your svelte.config.js.
 
-in lib/server/remote/demo.remote.ts add 
+In `packages/web/src/lib/server/remote/demo.remote.ts` add
 ```ts
 import { query } from '$app/server';
 import { takeFirstOrNull } from "@[PROJECT_NAME]/shared/utils/queries";
@@ -227,9 +226,19 @@ export const getUser = query(async () => {
 
     return user;
 });
-
-
 ```
+
+add this to the +page.svelte:
+```svelte
+<script lang="ts">
+const user = $derived(await getUser());
+</script>
+
+<p>
+  The lastest user got created at {user.createdAt} and was {user.email}
+</p>
+```
+
 ## 6. Setup Docker
 Create docker-compose.yaml
 ```YAML
