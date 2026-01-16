@@ -9,8 +9,6 @@ Before starting, make sure you have the name of the project. Otherwise, assume i
 Initialize the root project directory and package.json:
 
 ```bash
-bun init -y
-rm index.ts # Cleanup default file
 mkdir packages
 ```
 
@@ -36,8 +34,6 @@ Set up the `@[PROJECT_NAME]/shared` package which contains shared code and const
 ```bash
 mkdir -p packages/shared
 cd packages/shared
-bun init -y
-rm index.ts # Cleanup default file
 mkdir src
 ```
 
@@ -78,11 +74,6 @@ Set up the `@[PROJECT_NAME]/db` package for database schema and migrations.
 cd ../.. # Return to root
 mkdir -p packages/db
 cd packages/db
-bun init -y
-bun add drizzle-orm
-bun add -d drizzle-kit postgres
-rm index.ts
-mkdir src
 ```
 
 Update `packages/db/package.json` to set the name and scripts:
@@ -100,6 +91,13 @@ Update `packages/db/package.json` to set the name and scripts:
     "push": "bun --env-file=../../.env drizzle-kit push"
   }
 }
+```
+
+Run these:
+```bash
+bun add drizzle-orm
+bun add -d drizzle-kit postgres
+mkdir src
 ```
 
 Create `packages/db/drizzle.config.ts`:
@@ -170,8 +168,6 @@ Set up the `worker` service consuming both shared and db packages.
 cd ../.. # Return to root
 mkdir -p packages/worker
 cd packages/worker
-bun init -y
-rm index.ts
 mkdir src
 ```
 
@@ -207,13 +203,17 @@ cd ../.. # Return to root
 mkdir -p packages/web
 cd packages/web
 bunx sv create . --template="minimal" --types="ts" --no-install --no-dir-check --add tailwind="plugins:typography"
+bun add -D @sveltejs/adapter-node
 ```
 Add these to the dependencies in `packages/web/package.json`:
 ```json
 "@[PROJECT_NAME]/shared": "workspace:*",
-"@[PROJECT_NAME]/db": "workspace:*"`svelte.config.js`.
+"@[PROJECT_NAME]/db": "workspace:*"
 ```
-In `packages/web/src/lib/server/remote/demo.remote.ts`,emoteFunctions and the compilerOptions.experimental.async option in your svelte.config.js.
+
+Switch from @sveltejs/adapter-auto to @sveltejs/adapter-node in the svelte.config.js
+
+Add the kit.experimental.remoteFunctions and compilerOptions.experimental.async  option in your svelte.config.js
 
 In `packages/web/src/lib/server/remote/demo.remote.ts` add
 ```ts
@@ -286,7 +286,7 @@ Create each of the docker files referenced in the docker compose file.
 Create a `.env.example` file in the root directory:
 
 ```env
-DATABASE_URL=
+DATABASE_URL="postgres://devuser:your_secure_password@db:5432/app_dev"
 ```
 
 Install all dependencies from the root to link workspaces:
