@@ -49,14 +49,19 @@ Update `packages/shared/package.json` to set the correct name:
   "version": "0.0.0",
   "main": "src/index.ts",
   "types": "src/index.ts",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
   "private": true
 }
 ```
 
-Create `packages/shared/src/index.ts`:
+Create `packages/shared/src/utils/queries.ts`:
 
 ```typescript
-export const GREETING = "Hello from @[PROJECT_NAME]/shared!";
+export function takeFirstOrNull<T>(array: T[]): T | null {
+    return array.length >= 1 ? array[0] : null
+}
 ```
 
 ## 3. Database Package Setup
@@ -204,7 +209,21 @@ add these to the dependecies:
 "@[PROJECT_NAME]/shared": "workspace:*",
 "@[PROJECT_NAME]/db": "workspace:*"
 ```
+You must add the kit.experimental.remoteFunctions and the compilerOptions.experimental.async option in your svelte.config.js.
 
+in lib/server/remote/demo.remote.ts add 
+```ts
+import { query } from '$app/server';
+import { takeFirstOrNull } from "@[PROJECT_NAME]/shared/utils/queries";
+import { db, userTable } from "@[PROJECT_NAME]/db";
+
+export const getUser = query(async () => {
+	const user = await db.select().from(userTable).limit(1).then(takeFirstOrNull);
+
+    return user;
+});
+
+```
 
 ## 6. Final Configuration
 
