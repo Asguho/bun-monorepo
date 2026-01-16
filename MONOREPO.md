@@ -255,17 +255,13 @@ services:
 
   migrator:
     build: { context: ., dockerfile: packages/db/Dockerfile }
-    environment:
-      DATABASE_URL: &url postgres://devuser:your_secure_password@db:5432/app_dev
-    depends_on:
-      db: { condition: service_healthy }
+    environment: { DATABASE_URL: &url postgres://devuser:your_secure_password@db:5432/app_dev }
+    depends_on: { db: { condition: service_healthy } }
 
   web:
     build: { context: ., dockerfile: packages/web/Dockerfile }
     ports: ["3000:3000"]
-    environment: 
-      DATABASE_URL: *url
-      ORIGIN: http://localhost:3000
+    environment: {DATABASE_URL: *url,ORIGIN: http://localhost:3000}
     depends_on: &deps
       migrator: { condition: service_completed_successfully }
       db: { condition: service_healthy }
@@ -277,9 +273,8 @@ services:
 
 volumes:
   pgdata:
+
 ```
-
-
 Create `packages/db/Dockerfile`:
 
 ```dockerfile
@@ -370,4 +365,13 @@ Install all dependencies from the root to link workspaces:
 cd ../..
 bun install
 ```
+
+## 8. Tell the user that they should run
+```bash
+cd packages/db
+bun generate
+cd ../..
+docker compose up --build
+```
+Then `http://localhost:3000`to test
 
