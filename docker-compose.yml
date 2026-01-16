@@ -1,15 +1,12 @@
 services:
   db:
     image: pgvector/pgvector:pg17
-    # restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: your_secure_password
       POSTGRES_USER: devuser
       POSTGRES_DB: app_dev
-    ports:
-      - "5433:5432"          
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+    ports: ["5433:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U devuser -d app_dev"]
       interval: 5s
@@ -17,46 +14,26 @@ services:
       retries: 5
 
   migrator:
-    build:
-      context: .
-      dockerfile: packages/db/Dockerfile
-    restart: "no"
+    build: { context: ., dockerfile: packages/db/Dockerfile }
     environment:
-      DATABASE_URL: postgres://devuser:your_secure_password@db:5432/app_dev
-    working_dir: /usr/src/app
-    command: ["bun", "packages/db/src/migrate.ts"]
+      DATABASE_URL: &url postgres://devuser:your_secure_password@db:5432/app_dev
     depends_on:
-      db:
-        condition: service_healthy
+      db: { condition: service_healthy }
 
   web:
-    build:
-      context: .
-      dockerfile: packages/web/Dockerfile
-    # restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      DATABASE_URL: postgres://devuser:your_secure_password@db:5432/app_dev
+    build: { context: ., dockerfile: packages/web/Dockerfile }
+    ports: ["3000:3000"]
+    environment: 
+      DATABASE_URL: *url
       ORIGIN: http://localhost:3000
-    depends_on:
-      migrator:
-        condition: service_completed_successfully
-      db:
-        condition: service_healthy
+    depends_on: &deps
+      migrator: { condition: service_completed_successfully }
+      db: { condition: service_healthy }
 
   worker:
-    build:
-      context: .
-      dockerfile: packages/worker/Dockerfile
-    # restart: unless-stopped
-    environment:
-      DATABASE_URL: postgres://devuser:your_secure_password@db:5432/app_dev
-    depends_on:
-      migrator:
-        condition: service_completed_successfully
-      db:
-        condition: service_healthy
+    build: { context: ., dockerfile: packages/worker/Dockerfile }
+    environment: { DATABASE_URL: *url }
+    depends_on: *deps
 
 volumes:
   pgdata:

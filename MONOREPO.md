@@ -212,6 +212,7 @@ Add these to the dependencies in `packages/web/package.json`:
 ```json
 "@[PROJECT_NAME]/shared": "workspace:*",
 "@[PROJECT_NAME]/db": "workspace:*"`svelte.config.js`.
+```
 
 In `packages/web/src/lib/server/remote/demo.remote.ts`,emoteFunctions and the compilerOptions.experimental.async option in your svelte.config.js.
 
@@ -229,8 +230,49 @@ export const getUser = query(async () => {
 
 
 ```
+## 6. Setup Docker
+Create docker-compose.yaml
+```YAML
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_PASSWORD: your_secure_password
+      POSTGRES_USER: devuser
+      POSTGRES_DB: app_dev
+    ports: ["5433:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck: {test: [CMD-SHELL, pg_isready -U devuser -d app_dev], interval: 5s, timeout: 5s, retries: 5}
 
-## 6. Final Configuration
+  migrator:
+    build: { context: ., dockerfile: packages/db/Dockerfile }
+    environment:
+      DATABASE_URL: &url postgres://devuser:your_secure_password@db:5432/app_dev
+    depends_on:
+      db: { condition: service_healthy }
+
+  web:
+    build: { context: ., dockerfile: packages/web/Dockerfile }
+    ports: ["3000:3000"]
+    environment: 
+      DATABASE_URL: *url
+      ORIGIN: http://localhost:3000
+    depends_on: &deps
+      migrator: { condition: service_completed_successfully }
+      db: { condition: service_healthy }
+
+  worker:
+    build: { context: ., dockerfile: packages/worker/Dockerfile }
+    environment: { DATABASE_URL: *url }
+    depends_on: *deps
+
+volumes:
+  pgdata:
+```
+
+Create each of the docker files referenced in the docker compose file.
+
+## 7. Final Configuration
 
 Create a `.env.example` file in the root directory:
 
