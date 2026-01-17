@@ -124,7 +124,7 @@ import { pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const userTable = pgTable("userTable", {
     id: serial().primaryKey(),
-    email: text().notNull(),
+    email: text().unique().notNull(),
     createdAt: timestamp().defaultNow()
 });
 ```
@@ -231,13 +231,15 @@ export const getUser = query(async () => {
 add this to the +page.svelte:
 ```svelte
 <script lang="ts">
-import { getUser } from '$lib/remote/user.remote'
-const user = $derived(await getUser());
+    import { getUser } from "$lib/remote/user.remote";
+    const user = $derived(await getUser());
 </script>
 
-<p>
-  The lastest user got created at {user.createdAt} and was {user.email}
-</p>
+{#if user}
+    <p>The lastest user got created at {user.createdAt} and was {user.email}</p>
+{:else}
+    <p>No user, make sure the worker is running</p>
+{/if}
 ```
 
 ## 6. Setup Docker
