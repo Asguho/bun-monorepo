@@ -215,7 +215,7 @@ Switch from @sveltejs/adapter-auto to @sveltejs/adapter-node in the svelte.confi
 
 Add the kit.experimental.remoteFunctions and compilerOptions.experimental.async  option in your svelte.config.js
 
-In `packages/web/src/lib/server/remote/demo.remote.ts` add
+In `packages/web/src/lib/remote/user.remote.ts` add
 ```ts
 import { query } from '$app/server';
 import { takeFirstOrNull } from "@[PROJECT_NAME]/shared/utils/queries";
@@ -231,6 +231,7 @@ export const getUser = query(async () => {
 add this to the +page.svelte:
 ```svelte
 <script lang="ts">
+import { getUser } from '$lib/remote/user.remote'
 const user = $derived(await getUser());
 </script>
 
